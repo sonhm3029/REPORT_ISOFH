@@ -392,3 +392,129 @@ console.log(Object.values(obj));
 ```
 
 ![5](5.png)
+
+**f) Object.prototype:**
+
+Các cách khởi tạo một object
+
+```Javascript
+const obj1 = {};
+const obj2 = new Object();
+const obj3 = Object.create({})
+
+// function constructor
+
+function objCons(value1, value2) {
+    this.key1 = value1,
+    this.key2 = value2,
+    this.getKey1 = function() {
+        return value1;
+    }
+}
+
+const obj5 = new objCons(valueIn1, valueIn2);
+```
+
+Khi khởi tạo các Object bằng cùng một function constructor thì việc thêm thuộc tính hay sửa đổi các giá trị của các Object đó đều không có liên quan đến nhau. Tức là :
+
+```Javascript
+const obj5 = new objCons(1,3);
+const obj6 = new objCons(2,4);
+
+obj5.newKey = 9//
+console.log(obj5.newKey)//9
+console.log(obj6.newKey)//undefined
+```
+
+Để các Object tạo bằng cùng một function constructor đều thừa hưởng một thuộc tính mới được tạo bên ngoài function constructor thì ta dùng `Object.prototype`.
+
+```Javascript
+const obj5 = new objCons(1,3);
+const obj6 = new objCons(2,4);
+
+objCons.prototype.newKey = 9//
+console.log(obj5.newKey)//9
+console.log(obj6.newKey)//9
+
+objCons.prototype.hello = function() {
+    console.log('hello');
+}
+
+console.log(obj5.hello())//hello
+console.log(obj6.hello())//hello
+```
+
+**g) Object.prototype.constructor:**
+
+Hàm trả về function constructor của Object, không bao gồm các prototype được tạo sau này.
+
+```Javascript
+console.log(obj5.constructor)
+```
+
+![6](6.png)
+
+**h) Object.prototype.hasOwnProperty:**
+
+Trả về giá trị boolean cho biết object có thuộc tính được đưa ra không
+
+**Syntax:**
+
+```Javascript
+obj.hasOwnProperty(prop)
+```
+
+**Ví dụ:**
+
+```Javascript
+obj = new Object();
+obj.prop = 'exists';
+console.log(obj.hasOwnProperty('prop')); // true
+console.log(obj.hasOwnProperty('toString')); // false
+console.log(obj.hasOwnProperty('hasOwnProperty')); // false
+```
+
+**i) Object.prototype.valueOf:**
+
+Hàm set giá trị trả về cho một Object
+
+```Javascript
+function MyAge(age) {
+    this.age = age;
+};
+
+MyAge.prototype.valueOf  = function () {
+    return this.age;
+};
+
+const myAge = new MyAge(23);
+console.log('My age is', myAge - 1); // My age is 22
+```
+
+**Note:** Object là kiểu dữ liệu tham chiếu, tức là không thể so sánh hai Object kể cả khi mọi thuộc tính của chúng đều có giá trị giống nhau bởi vì tham chiếu của chúng luôn giống nhau. Chính vì vậy ta không nên tạo một object mới bằng cách gán nó bằng một Object đã được khởi tạo vì nó sẽ được gán tham chiếu của Object kia dẫn đến việc một trong hai Object thay đổi thì Object còn lại sẽ thay đổi theo.
+
+**Ví dụ 1:**
+
+```Javascript
+// Two variables, two distinct objects with the same properties
+var fruit = {name: 'apple'};
+var fruitbear = {name: 'apple'};
+
+fruit == fruitbear; // return false
+fruit === fruitbear; // return false
+```
+
+**Ví dụ 2:**
+
+```Javascript
+// Two variables, a single object
+var fruit = {name: 'apple'};
+var fruitbear = fruit;  // assign fruit object reference to fruitbear
+
+// here fruit and fruitbear are pointing to same object
+fruit == fruitbear; // return true
+fruit === fruitbear; // return true
+
+fruit.name = 'grape';
+console.log(fruitbear);    // yields { name: "grape" } instead of { name: "apple" }
+```
