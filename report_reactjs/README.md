@@ -1,10 +1,10 @@
 # BÁO CÁO REACTJS
 
-## I. Components
+# I. Components
 
 Có 2 loại components trong React là class components và function components.
 
-### 1. Class components
+## 1. Class components
 
 Để tạo một class component:
 
@@ -206,7 +206,7 @@ Vòng đời của các component trong react bao gồm:
 - Update: re-render trong DOM
 - Unmouting: Gỡ khỏi DOM.
 
-**Mounting:**
+### **Mounting:**
 
 React có 4 built-in methods được gọi theo thứ tự lần lượt như sau khi component được mount vào DOM:
 
@@ -236,3 +236,259 @@ class Header extends React.Component {
 
 ReactDOM.render(<Header />, document.getElementById('root'));
 ```
+
+- `getDerivedStateFromProps()`: update các state ban đầu với props của nó, hàm được gọi sau `constructor()` và ngay trước hàm `render()` (ngay trước khi component được render vào DOM). Hàm này nhận vào 2 tham số là `props` và `state` trả về object update `state`, trả về `null` khi không có update gì.
+
+```Javascript
+class Header extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {favoritecolor: "red"};
+  }
+  static getDerivedStateFromProps(props, state) {
+    return {favoritecolor: props.favcol };
+  }
+  render() {
+    return (
+      <h1>My Favorite Color is {this.state.favoritecolor}</h1>
+    );
+  }
+}
+
+ReactDOM.render(<Header favcol="yellow"/>, document.getElementById('root'));
+```
+
+Ví dụ trên update `state` của Component bằng `props` được truyền vào trước khi render cho nên khi render ra giá trị `favoritecoloor` sẽ là `yellow`.
+
+- `render()`: Hàm render component hiển thị trên DOM.
+
+- `componentDidMount()`
+
+Hàm gọi ra ngay sau khi component được render vào DOM. Do đó thường sử dụng để thực hiện các các công việc mà cần có mặt component trong DOM hay call api...
+
+```Javascript
+class Header extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {favoritecolor: "red"};
+  }
+  componentDidMount() {
+    setTimeout(() => {
+      this.setState({favoritecolor: "yellow"})
+    }, 1000)
+  }
+  render() {
+    return (
+      <h1>My Favorite Color is {this.state.favoritecolor}</h1>
+    );
+  }
+}
+
+ReactDOM.render(<Header />, document.getElementById('root'));
+```
+
+### **Updating**
+
+Một component sẽ được update khi có `states` hay `props` nào của nó bị thay đổi.
+
+Updating có 5 built-in function được gọi theo thứ tự sau khi component update:
+
+1. `getDerivedStateFromProps()`
+2. `shouldComponentUpdate()`
+3. `render()`
+4. `getSnapshotBeforeUpdate()`
+5. `componentDidUpdate()`
+
+Trong đó `render()` luôn luôn được gọi, các hàm còn lại là optional, sẽ được gọi nếu ta khai báo chúng.
+
+- `getDerivedStateFromProps()`
+
+Hàm này được gọi đầu tiên khi có `states` hay `props` của component bị thay đổi, cách hoạt động giống như hàm này ở phần mounting
+
+```Javascript
+class Header extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {favoritecolor: "red"};
+  }
+  static getDerivedStateFromProps(props, state) {
+    return {favoritecolor: props.favcol };
+  }
+  changeColor = () => {
+    this.setState({favoritecolor: "blue"});
+  }
+  render() {
+    return (
+      <div>
+      <h1>My Favorite Color is {this.state.favoritecolor}</h1>
+      <button type="button" onClick={this.changeColor}>Change color</button>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Header favcol="yellow"/>, document.getElementById('root'));
+```
+
+Khi nhấn button `Change color` dòng chữ `yellow` giữa nguyên vì hàm `static getDerivedStateFromProps` được gọi đầu tiên khi component update nên nó sẽ thay đổi lại từ `blue` về `yellow`.
+
+- `shouldComponentUpdate()`
+
+Hàm trả về boolean, `true` thì sẽ cho phép update và ngược lại.
+
+```Javascript
+class Header extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {favoritecolor: "red"};
+  }
+  shouldComponentUpdate() {
+    return false;
+  }
+  changeColor = () => {
+    this.setState({favoritecolor: "blue"});
+  }
+  render() {
+    return (
+      <div>
+      <h1>My Favorite Color is {this.state.favoritecolor}</h1>
+      <button type="button" onClick={this.changeColor}>Change color</button>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Header />, document.getElementById('root'));
+```
+
+Khi ấn `change color` thì dòng `red` sẽ giữa nguyên vì hàm `shouldComponentUpdate()` trả về `false`, nếu ta sửa lại cho hàm trả về `true` thì `red` sẽ chuyền thành `blue`.
+
+- `render()`
+
+Hàm render lại Component sau khi đã được update.
+
+- `getSnapshotBeforeUpdate()`
+
+Trong hàm này, ta có thể truy cập đến `props` vs `state` của Component trước khi được update tức là kể cả sau khi `state` của Component đã được update r thì ta vẫn xem lại `state` trươc đó của nó được.
+
+Chú ý rằng, phương thức này bắt buộc phải đi kèm với `componenDidUpdate()` nếu không sẽ có lỗi.
+
+Ví dụ :
+
+```Javascript
+class Header extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {favoritecolor: "red"};
+  }
+  componentDidMount() {
+    setTimeout(() => {
+      this.setState({favoritecolor: "yellow"})
+    }, 1000)
+  }
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    document.getElementById("div1").innerHTML =
+    "Before the update, the favorite was " + prevState.favoritecolor;
+  }
+  componentDidUpdate() {
+    document.getElementById("div2").innerHTML =
+    "The updated favorite is " + this.state.favoritecolor;
+  }
+  render() {
+    return (
+      <div>
+        <h1>My Favorite Color is {this.state.favoritecolor}</h1>
+        <div id="div1"></div>
+        <div id="div2"></div>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Header />, document.getElementById('root'));
+```
+
+Chương trình trên sẽ chạy như sau:
+
+- Component được `mounted` vào DOM, kết quả hiển thị:
+
+![1](1.png)
+
+Sau khi được `mounted` vào DOM bằng `render`, hàm `componentDidMount` chạy và thực hiện `setTimeout`, sau 1s thì `state` của Component thay đổi.
+
+Hai hàm `getDerivedStateFromProps()`, `shouldComponentUpdate()` không khai báo nên không được gọi nên hàm `render` sẽ được gọi luôn, khi đó t sẽ thấy dòng `My Favorite Color is yellow`. Sau khi đã được updated và render lại thì hàm `getSnapshotBeforeUpdate` được gọi hiển thị thông tin trong `#div1` và cuối cùng thì `componentDidUpdate` được gọi và hiển thị thông tin trong `#div2`
+
+![2](2.png)
+
+### **Unmounting**
+
+Bỏ Component ra khỏi DOM. Phase này chỉ có duy nhất một hàm được thực hiện ngay trước khi Component được Unmounting khỏi DOM, hàm này thường dùng để remove các event, các hàm không cần thiết sử dụng nếu như không có mặt component trong DOM để tránh bị memory leak.
+
+- `componentWillUnmount()`
+
+**Ví dụ:**
+
+```Javascript
+class Container extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {show: true};
+  }
+  delHeader = () => {
+    this.setState({show: false});
+  }
+  render() {
+    let myheader;
+    if (this.state.show) {
+      myheader = <Child />;
+    };
+    return (
+      <div>
+      {myheader}
+      <button type="button" onClick={this.delHeader}>Delete Header</button>
+      </div>
+    );
+  }
+}
+
+class Child extends React.Component {
+  componentWillUnmount() {
+    alert("The component named Header is about to be unmounted.");
+  }
+  render() {
+    return (
+      <h1>Hello World!</h1>
+    );
+  }
+}
+
+ReactDOM.render(<Container />, document.getElementById('root'));
+```
+
+Khi ấn nút xóa header thì `componentWillUnmount` sẽ được chạy hiển thị ra alert box, sau đó header mới được gỡ khỏi DOM.
+
+Ngoài ra còn có phase handle error nếu trong quá trình làm việc với DOM của component gây ra lỗi
+
+- `static getDerivedStateFromError()`
+- `componentDidCatch()`.
+
+## 2. Function Components
+
+Khai báo một function component:
+
+Cách đặt tên giống như class Component, chữ cái đầu tiên phải viết hoa. Function component đem lại những thuận tiện hơn so với class Component, xử lý state, prop, vòng đời với các hooks.
+
+```Javascript
+function Component1() {
+  return (
+    <h1>This is parahraph</h1>
+  );
+}
+
+const Component2 = () => {
+  return (
+    <div>This is div</div>
+  )
+}
+```
+
