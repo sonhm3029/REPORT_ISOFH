@@ -1,5 +1,14 @@
 # BÁO CÁO REACTJS
 
+# Table of contents
+
+- [BÁO CÁO REACTJS](#bo-co-reactjs)
+- [I. Components](#i-components)
+  - [1. Class components](#1-class-components)
+  - [2. Function Components](#2-function-components)
+  - [3. HOC (Higher Order Component)](#3-hoc-higher-order-component)
+  - [4. Higher Order Function](#4-higher-order-function)
+
 # I. Components
 
 Có 2 loại components trong React là class components và function components.
@@ -491,4 +500,260 @@ const Component2 = () => {
   )
 }
 ```
+
+Function component sử dụng các hook để handle các state, lifecycle...
+
+Các hook của function component bao gồm:
+
+- [`useState`](https://github.com/sonmh2329/React_Learning#vii-usestate)
+- [`useEffect`](https://github.com/sonmh2329/React_Learning#viii-useeffect)
+- [`useContext`](https://github.com/sonmh2329/React_Learning#xv-usecontext)
+- [`useReducer`](https://github.com/sonmh2329/React_Learning#xiv-usereducer)
+- [`useCallback`](https://github.com/sonmh2329/React_Learning#xii-usecallback)
+- [`useMemo`](https://github.com/sonmh2329/React_Learning#xiii-usememo)
+- [`useRef`](https://github.com/sonmh2329/React_Learning#x-useref)
+- [`useImperativeHandle`](#)
+- [`useLayoutEffect`](https://github.com/sonmh2329/React_Learning#ix-uselayouteffect)
+- [`useDebugValue`]
+
+[HOC `react.memo`](https://github.com/sonmh2329/React_Learning#xi-reactmemo-hoc)
+
+Để mô tả Lifecycle của function components thì ta có hook `useEffect`. Các lifecycle method của class components tương ứng với `useEffect` như sau:
+
+Trước hết ta có syntax:
+
+```Javascript
+useEffect(callback, [deps])
+```
+
+1. `componentDidMount`: tương ứng với việc sử dụng `useEffect` bình thường (có hoặc không có dependencies) vì `callback` của `useEffect` sẽ luôn được thực hiện ít nhất 1 lần khi component được mounted vào DOM.
+
+2. `componentDidUpdate`: tương ứng với việc sử dụng `useEffect` với dependencies:
+
+    ```Javascript
+    useEffect(() => {
+      // Inside this callback function we perform our side effects.
+    }, [dependency]);
+    ```
+  
+    hoặc
+
+    ```Javascript
+    useEffect(() => {
+      // Inside this callback function we perform our side effects.
+    }, []);
+    ```
+
+3. `componentWillUnmount`: tương ứng với việc sử dụng clean up function trong `useEffect` vì clean up function sẽ được gọi trước khi component unmounted khỏi DOM.
+
+    Ví dụ:
+
+    ```Javascript
+    useEffect(() => {
+      window.addEventListener("mousemove", () => {});
+      return () => {
+        window.removeEventListener("mousemove", () => {})
+      }
+    }, []);
+    ```
+
+## 3. HOC (Higher Order Component)
+
+Là một Component nhận vào một component khác làm tham số và trả về một component.
+
+Lý do: giúp code có thể tái sử dụng, dễ đọc, dễ nhìn hơn.
+
+**Ví dụ:** Xây dựng HOC giúp làm mờ ảnh khi di chuột vào
+
+```Javascript
+const withHoverOpacity = (ImgComponent) => {
+  
+
+  return function() {
+
+    const [opacity,setOpacity] = useState(1);
+
+    const onMouseEnter = () => {
+      setOpacity(0.5);
+    }
+
+    const onMouseLeave = () => {
+      setOpacity(1);
+    }
+
+    return (
+      <div className="hover-wrapper"
+        style={{opacity: opacity}}
+        onMouseEnter={onMouseEnter}
+        oneMouseLeave={onMouseLeave}
+      >
+        <ImgComponent />
+      </div>
+    )
+  }
+}
+```
+
+Để có một `ImgComponent` nào đó cần có chức năng mờ đi khi hover vào thì ta làm như sau:
+
+```Javascript
+const Image = () => {
+  return (
+    <img src="...path" alt="" />
+  );
+}
+
+const HoveredImg = withHoverOpacity(Image);
+
+```
+
+Bây giờ ta đã có component `<HoverdImg />` thỏa mãn yêu cầu.
+
+Xem [ví dụ](https://codesandbox.io/s/prod-butterfly-jcjxr?file=/src/App.js)
+
+## 4. Higher Order Function
+
+**Định nghĩa:** Là function thỏa mãn một trong hai hoặc cả hai điều sau:
+
+- function nhận một hoặc nhiều function khác làm tham số (`callback`)
+- function trả về kết quả là một function.
+
+Việc sử dụng Higher Order Function có tác dụng tương tụ như khi sử dụng HOC, giúp code reusable.
+
+### a. Function nhận một hoặc nhiều function khác là tham số
+
+Ví dụ, lấy ra mảng các số thỏa mãn điều kiện nào đó từ mảng cho trước. Vì điều kiện là optional nên ta có ý tưởng tạo một HOF như sau:
+
+```Javascript
+const pickNumbers = (arr, conditionFunc) => {
+  let result = [];
+
+  for( let i = 0; i< arr.length; i++) {
+    if(conditionFunc(arr[i])) {
+      result.push(arr[i]);
+    }
+  }
+
+  return result;
+}
+```
+
+Bây giờ ví dụ ta muốn lấy ra từ mảng, các số là chẵn
+
+```Javascript
+const arr = [1,3,5,2,5,7,8,23,6];
+
+const evenNum = pickNumbers(arr, (number) => {
+  return number%2 == 0;
+})
+```
+
+Hay lấy mảng các số chia hết cho 3 nhỏ hơn 10:
+
+```Javascript
+const oddNum = pickNumbers(arr,(number)=> {
+  return (number%3==0 && number<10); 
+})
+```
+
+### b. Function trả về một function
+
+Sử dụng nhiều trong ứng dụng gọi là Currying:
+
+**Định nghĩa:** Currying là kỹ thuật mà cho phép chuyển đổi một function với nhiều tham số
+thành những functions liên tiếp có một tham số.
+
+// Ví dụ f(a,b,c) có thể được convert thành g(a)h(b, c) hay g(a)h(b)k(c), thậm chí là đổi thứ tự của các function tương ứng...
+
+Currying sẽ thấy nhiều trong redux.
+
+Xét ví dụ đơn giản:
+
+Hàm kiểm tra độ dài xâu s có vượt quá một số tự nhiên n nào đó
+
+Không dùng Currying
+
+```Javascript
+function isLengthOver(s,n) {
+  return s.length > n;
+}
+
+//Sử dụng
+const str = "okhehe";
+console.log(isLengthover(str,10));
+```
+
+Dùng Currying
+
+```Javascript
+function isLengthOver(s) {
+  return function(n) {
+    return s.length > n;
+  }
+}
+
+// Sử dụng
+const str = "okehihi";
+console.log(isLengthOver(str)(10));
+```
+
+## 5. React ref và useRef, forwardRef
+
+`useRef` đã được tìm hiểu và có các ví dụ tại phần `useRef` hook của phần function component
+
+Với `useRef` ta có thể tạo ra một giá trị giữ nguyên (persit) giữa các lần render. Thay đổi giá trị tạo bởi `useRef` sẽ không làm component re-render.
+
+Việc thay đổi giá trị `.current` nên được đặt trong `useEffect` hay các hàm handle.Tránh việc xử lý trực tiếp bên ngoài.
+
+![3.png](./3.png)
+
+**Lưu ý:** Cần hạn chế việc sử dụng `useRef` vì nó làm thay đổi DOM, dễ dẫn đến conflict trong React...
+
+### forwardRef
+
+Ví dụ khi làm việc với web, ta tạo ra một component như sau:
+
+```Javascript
+import React from 'react'
+
+const LabelledInput = (props) => {
+  const { id, label, value, onChange } = props
+
+  return (
+    <div class="labelled--input">
+      <label for={id}>{label}</label>
+      <input id={id} onChange={onChange} value={value} />
+    </div>
+  )
+}
+
+export default LabelledInput
+```
+
+Ta gặp một vấn đề đó là không thể sử dụng `ref` với `LabelledInput` component như những DOM element thông thường. Việc sử dụng ref ở đây sẽ trả về instance của `LabelledInput`, một React component reference chứ không phải là trả về `input` element như ta sử dụng trong ứng dụng focus vào `input` element.
+
+Để giải quyết vấn đề này. Ta dùng `forwardRef` như sau:
+
+```Javascript
+import React from 'react'
+
+const LabelledInput = (props, ref) => {
+  const { id, label, value, onChange } = props
+
+  return (
+    <div class="labelled--input">
+      <label for={id}>{label}</label>
+      <input id={id} onChange={onChange} value={value} ref={ref}/>
+    </div>
+  )
+}
+
+export default React.forwardRef(LabelledInput)
+```
+
+Bọc `LabelledInput` với một HOC là `React.forwardRef`. Bây giờ ta có thể sử dụng custom input component này bình thường như sử dụng với input element.
+
+Xem [ví dụ](https://codesandbox.io/s/input-modal-example-l2wst?from-embed=&file=/src/input-modal.js)
+
+# II. React Router v6
 
