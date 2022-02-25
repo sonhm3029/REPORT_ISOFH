@@ -3,11 +3,17 @@
 # Table of contents
 
 - [BÁO CÁO REACTJS](#bo-co-reactjs)
+- [Table of contents](#table-of-contents)
 - [I. Components](#i-components)
   - [1. Class components](#1-class-components)
   - [2. Function Components](#2-function-components)
   - [3. HOC (Higher Order Component)](#3-hoc-higher-order-component)
   - [4. Higher Order Function](#4-higher-order-function)
+  - [5. React ref và useRef, forwardRef](#5-react-ref-v-useref-forwardref)
+- [II. React Router v6](#ii-react-router-v6)
+- [III. Code Splitter](#iii-code-splitter)
+  - [1.import()](#1import)
+  - [2. React.lazy](#2-reactlazy)
 
 # I. Components
 
@@ -757,3 +763,108 @@ Xem [ví dụ](https://codesandbox.io/s/input-modal-example-l2wst?from-embed=&fi
 
 # II. React Router v6
 
+[Link ghi chú](https://github.com/sonmh2329/React_Learning#xvii-react-router-v6)
+
+[Link code sandbox](https://codesandbox.io/s/angry-hoover-ntqpby?file=/src/routes/invoices.js)
+# III. Code Splitter
+
+## 1.import()
+
+Thông thường ta sử dụng import như sau:
+
+```Javascript
+import {add} from './math';
+
+console.log(add(1,2));
+```
+
+Ta có thể dùng như sau:
+
+```Javascript
+import('./math').then(math => {
+  console.log(math.add(1,2));
+})
+```
+
+Nếu đang dùng Create react app thì đã được config sẵn, chỉ việc dùng.
+
+## 2. React.lazy
+
+Thay vì phải import hết một loạt các package ta cần trong một lần thì khi dùng `React.lazy` chỉ khi nào ta dùng đến package thì nó mới được gọi.
+
+Before:
+
+```Javascript
+import OtherComponent from './OtherComponent';
+```
+
+After:
+
+```Javascript
+const OtherComponent = React.lazy(()=> import('./OtherComponent'));
+```
+
+**Note:** Lazy component nên được bọc bởi React.Suspense như sau:
+
+```Javascript
+import React, { Suspense } from 'react';
+
+const OtherComponent = React.lazy(() => import('./OtherComponent'));
+
+function MyComponent() {
+  return (
+    <div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <OtherComponent />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+Việc bọc component với `Suspense` sẽ cung cấp cho ta một `fallback`, `fallback` được gán với một element nào đó và show ra khi lazy component chưa render xong ( ví dụ như spinner xoay...)
+
+Có thể ứng dụng Lazy component trong việc làm route cho web.
+
+```Javascript
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+const Home = lazy(() => import('./routes/Home'));
+const About = lazy(() => import('./routes/About'));
+
+const App = () => (
+  <Router>
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
+    </Suspense>
+  </Router>
+);
+```
+
+Tóm lại, React lazy giúp tăng performance và trải nghiệm người dùng.
+
+**Lưu ý:** `React.lazy` chỉ sử dụng được cho `export default`, vì vậy muốn sử dụng nó với `name export` ta có thể `export default` ra `name export` tại file khác:
+
+Trong `ManyComponents.js`
+
+```Javascript
+export const MyComponent = /* ... */;
+export const MyUnusedComponent = /* ... */;
+```
+
+Trong `MyComponent.js`
+
+```Javascript
+export { MyComponent as default } from "./ManyComponents.js";
+```
+
+Trong `MyApp.js`
+
+```Javascript
+import React, { lazy } from 'react';
+const MyComponent = lazy(() => import("./MyComponent.js"));
+```
